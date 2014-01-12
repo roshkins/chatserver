@@ -24,21 +24,32 @@ class ChatRunner
 		end
 
 		def run(sock)
-			sock.puts "Hello world!"
+			sock.puts "Welcome to the XYZ chat server"
+			@usernames ||= []
+			username = nil
+			loop do
+				sock.puts "Login name?"
+				username = sock.gets.strip
+				unless @usernames.include? username
+					@usernames << username
+					sock.puts "Welcome #{username}!"
+					break
+				else
+					sock.puts "Sorry, name taken."
+				end
+			end
 			@threads ||= []
-			message = nil
 			@threads << Thread.new(sock) do |sock|
 				Thread.abort_on_exception = true
 				loop do
 					Thread.stop
-					sock.puts message[:message]
+					sock.puts "#{@message[:username]}: #{@message[:message]}"
 				end
 			end
 			loop do
-				sock.print "Enter a message to tell the world: "
-				message = {:time => Time.new, :message => sock.gets}
-				if message[:message][0] == "/"
-					self.proccess_command message[:message][1..-1], sock
+				@message = {:time => Time.new, :username => username, :message => sock.gets}
+				if @message[:message][0] == "/"
+					self.proccess_command @message[:message][1..-1], sock
 				else
 					@threads.each do |thread|
 					 	thread.run if thread.status == "sleep"
