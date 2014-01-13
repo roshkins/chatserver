@@ -1,55 +1,59 @@
 require 'webrick'
 require 'thread'
-
+require './server_commands'
 class ChatRunner
 	class ChatServer < WEBrick::GenericServer
 
-		def proccess_command message, sock
+		include ServerCommands
 
-			command = message.split(/ /,2)
-			command[0] = command.first.downcase.strip
-
-			puts "Command logged: #{command.join " "}"
-
-			if ["quit"].include? command.first
-				self.send *command, sock
-			else
-				sock.puts "Not a valid command."
-			end
-		end
-
-		def quit *args, sock
-				sock.puts "BYE"
-				Thread.kill(Thread.current)
-		end
-
-		def run(sock)
-			sock.puts "Welcome to the XYZ chat server"
+		def username sock
 			@usernames ||= []
-			username = nil
+			Thread.current[:username] = nil
 			loop do
 				sock.puts "Login name?"
-				username = sock.gets.strip
-				unless @usernames.include? username
-					@usernames << username
-					sock.puts "Welcome #{username}!"
+				Thread.current[:username] = sock.gets.strip
+				unless @usernames.include? Thread.current[:username]
+					@usernames << Thread.current[:username]
+					sock.puts "Welcome #{Thread.current[:username]}!"
 					break
 				else
 					sock.puts "Sorry, name taken."
 				end
 			end
+		end
+
+		def shutdown
+			super
+			puts "\nGoodbye!"
+			Thread.list.each(&exit)
+		end
+
+		def run(sock)
+			sock.puts "Welcome to the XYZ chat server"
+
+			self.username sock
+
 			@threads ||= []
-			@threads << Thread.new(sock) do |sock|
+			@threads << user_thread = Thread.new(sock) do |sock|
 				Thread.abort_on_exception = true
 				loop do
 					Thread.stop
-					sock.puts "#{@message[:username]}: #{@message[:message]}"
+					current_room = Thread.current[:current_room]
+					if @message[:room] == current_room
+						sock.puts "#{@message[:username]}:\
+ #{@message[:message]}"
+					end
+
 				end
 			end
 			loop do
-				@message = {:time => Time.new, :username => username, :message => sock.gets}
+				@message = {:time => Time.new, 
+					:room => Thread.current[:current_room], 
+					:username => Thread.current[:username],
+					:message => sock.gets}
 				if @message[:message][0] == "/"
-					self.proccess_command @message[:message][1..-1], sock
+					self.proccess_command @message[:message][1..-1], user_thread,
+					 sock
 				else
 					@threads.each do |thread|
 					 	thread.run if thread.status == "sleep"
@@ -66,11 +70,11 @@ class ChatRunner
 		trap('INT') { server.shutdown }
 
 
-		begin
+		# begin
 			server.start
-		rescue 
-			server.shutdown
-		end
+		# rescue 
+		# 	server.shutdown
+		# end
 	end
 	
 	
