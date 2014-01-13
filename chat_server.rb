@@ -85,7 +85,5 @@ class ChatRunner
 	
 end
 
-if __FILE__ == $0
-	ChatRunner.new
-end
+ChatRunner.new
 
