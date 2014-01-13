@@ -35,10 +35,17 @@ module ServerCommands
 			@rooms[room_name] ||= []
 			@rooms[room_name] << Thread.current[:username]
 			user_thread[:current_room] = room_name
-		end
 
-		sock.puts "entering room: #{room_name}"
-		users room_name, user_thread, sock
+			sock.puts "entering room: #{room_name}"
+			users room_name, user_thread, sock
+
+			@message = {:system => true, 
+				:message => "new user joined chat: \
+#{Thread.current[:username]}", :room => room_name}
+			(@threads - [user_thread]).each do |thread|
+				thread.run if thread.status == "sleep"
+			end
+		end
 	end
 
 	def users *room_name, user_thread, sock

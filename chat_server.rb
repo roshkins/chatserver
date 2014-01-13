@@ -40,19 +40,24 @@ class ChatRunner
 					Thread.stop
 					current_room = Thread.current[:current_room]
 					if @message[:room] == current_room
-						sock.puts "#{@message[:username]}:\
+						unless @message[:system]
+							sock.puts "#{@message[:username]}:\
  #{@message[:message]}"
+						else
+							sock.puts " * #{@message[:message]}"
+						end
 					end
 
 				end
 			end
 			loop do
 				@message = {:time => Time.new, 
-					:room => Thread.current[:current_room], 
+					:room => user_thread[:current_room], 
 					:username => Thread.current[:username],
 					:message => sock.gets}
 				if @message[:message][0] == "/"
-					self.proccess_command @message[:message][1..-1], user_thread,
+					self.proccess_command @message[:message][1..-1],
+					 user_thread,
 					 sock
 				else
 					@threads.each do |thread|
