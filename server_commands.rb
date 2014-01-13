@@ -1,18 +1,29 @@
 module ServerCommands
 
+	THE_COMMANDS = ["quit", "rooms", "join", "leave", "users"]
+
 	def proccess_command message, user_thread, sock
 		command = message.strip.split(/ /,2)
 		command[0] = command.first.downcase
 
 		puts "Command logged: #{command.join " "}"
 
-		if ["quit", "rooms", "join", "leave", "users"].
-			include? command.first
-			self.send *command, user_thread, sock
+
+		if THE_COMMANDS.include? command.first
+			begin
+				self.send *command, user_thread, sock
+			rescue ArgumentError => e
+				sock.puts "Needs something after that command."
+			end
+		elsif command.first == "help"
+			THE_COMMANDS.each do |command|
+				sock.puts "/#{command}"
+			end
 		else
 			sock.puts "Not a valid command."
 		end
 	end
+
 
 	def quit *arg, user_thread, sock
 			self.leave user_thread, sock
@@ -21,16 +32,19 @@ module ServerCommands
 	end
 
 	def rooms *arg, user_thread, sock
-		@rooms ||= Hash.new([])
-		sock.puts "Active rooms are:"
-		@rooms.each do |name, users|
-			sock.puts " * #{name} (#{users.length})"
+		if @rooms && @rooms.length > 0
+			sock.puts "Active rooms are:"
+			@rooms.each do |name, users|
+				sock.puts " * #{name} (#{users.length})"
+			end
+			sock.puts "end of list."
+		else
+			sock.puts "No active rooms."
 		end
-		sock.puts "end of list."
 	end
 
 	def join  *args, room_name, user_thread, sock
-		if room_name.to_s.length > 0
+		if room_name.to_s.length > 0 && !user_thread[:current_room]
 			@rooms ||= Hash.new
 			@rooms[room_name] ||= []
 			@rooms[room_name] << Thread.current[:username]
@@ -39,12 +53,13 @@ module ServerCommands
 			sock.puts "entering room: #{room_name}"
 			users room_name, user_thread, sock
 
-			@message = {:system => true, 
-				:message => "new user joined chat: \
-#{Thread.current[:username]}", :room => room_name}
-			(@threads - [user_thread]).each do |thread|
-				thread.run if thread.status == "sleep"
-			end
+			system_message \
+			"new user joined chat: #{Thread.current[:username]}", 
+			room_name, user_thread
+		elsif user_thread[:current_room]
+			sock.puts "You must leave your current room first!"
+		else
+			sock.puts "You must enter a room name."
 		end
 	end
 
@@ -65,11 +80,27 @@ module ServerCommands
 	def leave *arg, user_thread, sock
 		current_room = user_thread[:current_room]
 		if @rooms && current_room
+			system_message \
+			"user has left chat: #{Thread.current[:username]}",
+			user_thread[:current_room], user_thread
+			
+			sock.puts "user has left chat: \
+#{Thread.current[:username]} (** this is you)"
+
 			@rooms[current_room].delete Thread.current[:username]
 			@rooms.delete current_room if @rooms[current_room].empty?
 			user_thread[:current_room] = nil
 		else
 			sock.puts "No room to leave."
+		end
+	end
+
+	private
+
+	def system_message msg, room_name, user_thread
+		@message = {:system => true, :message => msg, :room => room_name}
+		(@threads - [user_thread]).each do |thread|
+			thread.run if thread.status == "sleep"
 		end
 	end
 end

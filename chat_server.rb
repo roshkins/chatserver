@@ -30,7 +30,7 @@ class ChatRunner
 
 		def run(sock)
 			sock.puts "Welcome to the XYZ chat server"
-
+			sock.puts "Type /help for help."
 			self.username sock
 
 			@threads ||= []
@@ -56,7 +56,7 @@ class ChatRunner
 					:username => Thread.current[:username],
 					:message => sock.gets}
 				if @message[:message][0] == "/"
-					self.proccess_command @message[:message][1..-1],
+					self.proccess_command @message[:message].strip[1..-1],
 					 user_thread,
 					 sock
 				else
