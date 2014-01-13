@@ -70,7 +70,7 @@ class ChatRunner
 	
 	def initialize
 		
-		server = ChatServer.new :Port => 9399
+		server = ChatServer.new :Port => 80
 
 		trap('INT') { server.shutdown }
 
@@ -85,7 +85,5 @@ class ChatRunner
 	
 end
 
-if __FILE__ == $0
-	ChatRunner.new
-end
+ChatRunner.new
 
