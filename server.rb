@@ -70,7 +70,7 @@ class ChatRunner
 	
 	def initialize
 		
-		server = ChatServer.new :Port => 80
+		server = ChatServer.new :Port => (ARGV.first || 80)
 
 		trap('INT') { server.shutdown }
 
