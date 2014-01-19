@@ -29,4 +29,4 @@ Here are some commands:
 
 ##Live server
 
-A live server is being hosted at ip `54.213.27.31` on port `9399`.
+A live server is being hosted at ip `54.200.198.139` on port `9399`.
