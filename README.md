@@ -10,6 +10,7 @@ This chat server allows you to talk with friends, old and new. It includes rooms
 4. make sure the correct ruby version is installed: `ruby -v`. The output should include the phrase `ruby 1.9.3`.
 5. run `ruby server.rb 9399` Replace `9399` with whichever port you want the server to run on.
 6. Enjoy! Connect any telnet client to your ip and your specified port.
+7. Press ctrl+c TWICE to exit.
 
 ##Usage
 
