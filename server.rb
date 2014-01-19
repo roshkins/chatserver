@@ -54,9 +54,9 @@ class ChatRunner
 				@message = {:time => Time.new, 
 					:room => user_thread[:current_room], 
 					:username => Thread.current[:username],
-					:message => sock.gets}
-				if @message[:message][0] == "/"
-					self.proccess_command @message[:message].strip[1..-1],
+					:message => sock.gets.to_s.strip}
+				if @message[:message].length > 0 && @message[:message][0] == "/"
+					self.proccess_command @message[:message][1..-1],
 					 user_thread,
 					 sock
 				else

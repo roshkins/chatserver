@@ -3,8 +3,8 @@ module ServerCommands
 	THE_COMMANDS = ["quit", "rooms", "join", "leave", "users"]
 
 	def proccess_command message, user_thread, sock
-		command = message.strip.split(/ /,2)
-		command[0] = command.first.downcase
+		command = message.to_s.strip.split(/ /,2)
+		command[0] = command.first.to_s.downcase
 
 		puts "Command logged: #{command.join " "}"
 
