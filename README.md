@@ -25,3 +25,7 @@ Here are some commands:
 |`/join room`|Joins room named 'room'. 'room' can be any word or phrase. If it's in the /rooms list then other people are already talking. If not, it creates a new room and puts you in it|
 |`/leave`|Leaves your current room|
 |`/users`|Displays a list of users currently in the room|
+
+##Live server
+
+A live server is being hosted at ip `54.213.27.31` on port `9399`.
